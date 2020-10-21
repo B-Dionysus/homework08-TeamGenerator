@@ -62,6 +62,7 @@ function askAboutEngineer(){
             mainDirectory();
     });
 }
+// Inquirer prompts for the interns
 function askAboutIntern(){
     inquirer.prompt(
         [{
@@ -86,14 +87,24 @@ function askAboutIntern(){
     });
 }
 
-
+// Initial question menu
 function mainDirectory(){
+    // Options is an arry of possible rols that w can fill
     let options=[];
     options.push("Add an engineer");
     options.push("Add an intern");    
+    // We can only have one manager on this team, so we need to check to see if
+    // we've already asked about that info.
     let weHaveAManagerAlready=false;
     for(emp of employeeArray) if(emp.getRole()==="Manager") weHaveAManagerAlready=true;
+
+    // If we already have a manager, then we give the user the option to finish
+    // This does allow the user to declare a team with one manager and no engineers or interns
+    // but the spec said "any number" of engineers and interns. And someone's got to hire those
+    // positions, after all. Maybe this is a brand new team!
     if(weHaveAManagerAlready) options.push("Finished");
+    // If we don't have a manager yet, however, we do not let the user end, and we give them the option to add one
+    // unshit() puts it option at the top of the list.
     else  options.unshift("Add a manager");
 
     inquirer.prompt([{
