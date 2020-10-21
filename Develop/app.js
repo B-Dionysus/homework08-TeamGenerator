@@ -9,26 +9,132 @@ const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
+const { inherits } = require("util");
 
-// Write code to use inquirer to gather information about the development team members,
-// and to create objects for each team member (using the correct classes as blueprints!)
+let employeeArray=[];
 
-// After the user has input all employees desired, call the `render` function (required
-// above) and pass in an array containing all employee objects; the `render` function will
-// generate and return a block of HTML including templated divs for each employee!
+// Inquirer prompts for the manager
+function askAboutManager(){
+    inquirer.prompt(
+        [{
+            message:"Manager Name:",
+            name:"name",
+            type:'input',
+        },
+        {
+            message:"Manager Office Number:",
+            name:"number",
+            type:'input',
+            validate:num=>isNaN(parseInt(num)) ? "Please enter a number" : true,
+        },
+        {
+            message:"Manager Email:",
+            name:"email",
+            type:'input',
+            validate:email=>email.indexOf("@")===-1 ? "Please enter a valid email" : true,
+        }]) 
+        .then(answers=>{
+            employeeArray.push(new Manager(answers.name, employeeArray.length, answers.email, answers.number));
+            mainDirectory();
+    });
+}
+// Inquirer prompts for the engineers
+function askAboutEngineer(){
+    inquirer.prompt(
+        [{
+            message:"Engineer Name:",
+            name:"name",
+            type:'input',
+        },
+        {
+            message:"Engineer Github UserName:",
+            name:"github",
+            type:'input',
+        },
+        {
+            message:"Engineer Email:",
+            name:"email",
+            type:'input',
+            validate:email=>email.indexOf("@")===-1 ? "Please enter a valid email" : true,
+        }]) 
+        .then(answers=>{
+            employeeArray.push(new Engineer(answers.name, employeeArray.length, answers.email, answers.github));
+            mainDirectory();
+    });
+}
+function askAboutIntern(){
+    inquirer.prompt(
+        [{
+            message:"Intern Name:",
+            name:"name",
+            type:'input',
+        },
+        {
+            message:"What school are they attending:",
+            name:"school",
+            type:'input',
+        },
+        {
+            message:"Intern Email:",
+            name:"email",
+            type:'input',
+            validate:email=>email.indexOf("@")===-1 ? "Please enter a valid email" : true,
+        }]) 
+        .then(answers=>{
+            employeeArray.push(new Intern(answers.name, employeeArray.length, answers.email, answers.school));
+            mainDirectory();
+    });
+}
 
-// After you have your html, you're now ready to create an HTML file using the HTML
-// returned from the `render` function. Now write it to a file named `team.html` in the
-// `output` folder. You can use the variable `outputPath` above target this location.
-// Hint: you may need to check if the `output` folder exists and create it if it
-// does not.
 
-// HINT: each employee type (manager, engineer, or intern) has slightly different
-// information; write your code to ask different questions via inquirer depending on
-// employee type.
+function mainDirectory(){
+    let options=[];
+    options.push("Add an engineer");
+    options.push("Add an intern");    
+    let weHaveAManagerAlready=false;
+    for(emp of employeeArray) if(emp.getRole()==="Manager") weHaveAManagerAlready=true;
+    if(weHaveAManagerAlready) options.push("Finished");
+    else  options.unshift("Add a manager");
 
-// HINT: make sure to build out your classes first! Remember that your Manager, Engineer,
-// and Intern classes should all extend from a class named Employee; see the directions
-// for further information. Be sure to test out each class and verify it generates an
-// object with the correct structure and methods. This structure will be crucial in order
-// for the provided `render` function to work! ```
+    inquirer.prompt([{
+        message:"Add an employee:",
+        name:"role",
+        type:"list",
+        choices:options
+    }])
+    .then(answers=>{
+        switch(answers.role){
+            case "Add a manager":{
+                askAboutManager();
+                break;
+            }
+            case "Add an engineer":{
+                askAboutEngineer();
+                break;
+            }
+            case "Add an intern":{
+                askAboutIntern();
+                break;
+            }
+            case "Finished":{
+                writeFile(employeeArray);
+                break;
+            }
+        }
+    });
+}
+
+
+
+
+function init(){
+    mainDirectory();
+}
+function writeFile(arr){
+    let html=render(arr);
+    fs.writeFile("./output/team.html",html,error=>error ? console.log(error) : console.log("Success"));
+}
+
+
+
+init();
